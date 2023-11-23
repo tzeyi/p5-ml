@@ -330,7 +330,10 @@ private:
   // NOTE:    This function must run in constant time.
   //          No iteration or recursion is allowed.
   static bool empty_impl(const Node *node) {
-    assert(false);
+    if (!node){
+      return true;
+    }
+    return false;
   }
 
   // EFFECTS: Returns the size of the tree rooted at 'node', which is the
@@ -338,15 +341,26 @@ private:
   //          tree is 0.
   // NOTE:    This function must be tree recursive.
   static int size_impl(const Node *node) {
-    assert(false);
+    if (!node){
+      return 0;
+    }
+    return 1 + size_impl(node->left) + size_impl(node->right);
   }
 
   // EFFECTS: Returns the height of the tree rooted at 'node', which is the
   //          number of nodes in the longest path from the 'node' to a leaf.
   //          The height of an empty tree is 0.
   // NOTE:    This function must be tree recursive.
+  static int max(int x, int y){
+    if (x > y) {return x;}
+    else {return y;}
+  }
+
   static int height_impl(const Node *node) {
-    assert(false);
+    if (!node){
+      return 0;
+    }
+    return 1 + max(height_impl(node->left), height_impl(node->right));
   }
 
   // EFFECTS: Creates and returns a pointer to the root of a new node structure
@@ -354,13 +368,27 @@ private:
   //          tree rooted at 'node'.
   // NOTE:    This function must be tree recursive.
   static Node *copy_nodes_impl(Node *node) {
-    assert(false);
+
+    Node *new_node = new Node;
+    if (!node){
+      return new_node;
+    }else{
+      new_node->datum = node->datum;
+      new_node->left = copy_nodes_impl(node->left);
+      new_node->right = copy_nodes_impl(node->right);
+    }
+
+    return new_node;
   }
 
   // EFFECTS: Frees the memory for all nodes used in the tree rooted at 'node'.
   // NOTE:    This function must be tree recursive.
   static void destroy_nodes_impl(Node *node) {
-    assert(false);
+    if (node){
+      delete node;
+      destroy_nodes_impl(node->left);
+      destroy_nodes_impl(node->right);
+    }
   }
 
   // EFFECTS : Searches the tree rooted at 'node' for an element equivalent
@@ -376,7 +404,13 @@ private:
   //       Two elements A and B are equivalent if and only if A is
   //       not less than B and B is not less than A.
   static Node * find_impl(Node *node, const T &query, Compare less) {
-    assert(false);
+    if (!node){
+      return nullptr;
+    }else if (less(query, node->datum)){
+      return find_impl(node->left, query, less);
+    } else {
+      return find_impl(node->right, query, less);
+    }
   }
 
   // REQUIRES: item is not already contained in the tree rooted at 'node'
@@ -395,7 +429,27 @@ private:
   //       template, NOT according to the < operator. Use the "less"
   //       parameter to compare elements.
   static Node * insert_impl(Node *node, const T &item, Compare less) {
-    assert(false);
+
+    Node *new_node = new Node;
+    new_node->datum = item;
+    bool first = true;
+
+    if (first && !node){
+      first = false;
+      return new_node;
+    } 
+    
+    if (!node && less(item, node->datum)){
+      node->left = new_node;
+      return node;
+    } else if (!node && less(node->datum, item)){
+      node->right = new_node;
+      return node;
+    } else if (less(item, node->datum)){
+      return insert_impl(node->left, item, less);
+    } else {
+      return insert_impl(node->right, item, less);
+    }
   }
 
   // EFFECTS : Returns a pointer to the Node containing the minimum element
