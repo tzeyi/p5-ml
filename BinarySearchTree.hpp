@@ -19,6 +19,8 @@
 #include <iostream> //ostream
 #include <functional> //less
 
+using namespace std;
+
 // You may add aditional libraries here if needed. You may use any
 // part of the STL except for containers.
 
@@ -408,8 +410,10 @@ private:
       return nullptr;
     }else if (less(query, node->datum)){
       return find_impl(node->left, query, less);
-    } else {
+    }else if (less(node->datum, query)){
       return find_impl(node->right, query, less);
+    }else {
+      return node;
     }
   }
 
@@ -429,27 +433,19 @@ private:
   //       template, NOT according to the < operator. Use the "less"
   //       parameter to compare elements.
   static Node * insert_impl(Node *node, const T &item, Compare less) {
+    Node *new_node = new Node(item, nullptr, nullptr);
 
-    Node *new_node = new Node;
-    new_node->datum = item;
-    bool first = true;
-
-    if (first && !node){
-      first = false;
+    // base case for empty and not empty
+    if (!node){
       return new_node;
-    } 
-    
-    if (!node && less(item, node->datum)){
-      node->left = new_node;
-      return node;
-    } else if (!node && less(node->datum, item)){
-      node->right = new_node;
-      return node;
-    } else if (less(item, node->datum)){
-      return insert_impl(node->left, item, less);
-    } else {
-      return insert_impl(node->right, item, less);
     }
+
+    if (less(item, node->datum)){
+      node->left = insert_impl(node->left, item, less);
+    } else {
+      node->right = insert_impl(node->right, item, less);
+    } 
+    return node;
   }
 
   // EFFECTS : Returns a pointer to the Node containing the minimum element
@@ -460,7 +456,13 @@ private:
   // HINT: You don't need to compare any elements! Think about the
   //       structure, and where the smallest element lives.
   static Node * min_element_impl(Node *node) {
-    assert(false);
+    if (!node){
+      return nullptr;
+    } else if (!node->left){
+      return node;
+    }
+
+    return min_element_impl(node->left);
   }
 
   // EFFECTS : Returns a pointer to the Node containing the maximum element
@@ -469,7 +471,13 @@ private:
   // HINT: You don't need to compare any elements! Think about the
   //       structure, and where the largest element lives.
   static Node * max_element_impl(Node *node) {
-    assert(false);
+    if (!node){
+      return nullptr;
+    } else if (!node->right){
+      return node;
+    }
+
+    return max_element_impl(node->right);
   }
 
 
@@ -477,7 +485,22 @@ private:
   //          rooted at 'node'.
   // NOTE:    This function must be tree recursive.
   static bool check_sorting_invariant_impl(const Node *node, Compare less) {
-    assert(false);
+    if (!node){
+      return true;
+    }
+
+    check_sorting_invariant(node->less, less);
+    check_sorting_invariant(node->right, less);
+
+    if (less(node->left->datum, node->datum)){
+      return true;
+    } else if (less(node->datum, node->right->datum)){
+      return true;
+    }else{
+      return false;
+    }
+
+    }
   }
 
   // EFFECTS : Traverses the tree rooted at 'node' using an in-order traversal,
