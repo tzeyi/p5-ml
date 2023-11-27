@@ -87,6 +87,17 @@ TEST(bst_test_check_sorting_invariant2){
   BinarySearchTree<int> tree;
 
   tree.insert(1);
+  tree.insert(2);
+  tree.insert(3);
+  tree.insert(4);
+
+  ASSERT_TRUE(tree.check_sorting_invariant());
+}
+
+TEST(bst_test_check_sorting_invariant3){
+  BinarySearchTree<int> tree;
+
+  tree.insert(1);
   tree.insert(0);
 
   *tree.begin() = 2;

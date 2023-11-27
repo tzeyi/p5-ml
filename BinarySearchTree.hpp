@@ -488,20 +488,12 @@ private:
     if (!node){
       return true;
     }
-
-    check_sorting_invariant(node->less, less);
-    check_sorting_invariant(node->right, less);
-
-    if (less(node->left->datum, node->datum)){
-      return true;
-    } else if (less(node->datum, node->right->datum)){
-      return true;
-    }else{
-      return false;
+    
+    return (!node->left || less(node->left->datum, node->datum)) &&
+           (!node->right || less(node->datum, node->right->datum)) &&
+           check_sorting_invariant_impl(node->left, less) &&
+           check_sorting_invariant_impl(node->right, less);
     }
-
-    }
-  }
 
   // EFFECTS : Traverses the tree rooted at 'node' using an in-order traversal,
   //           printing each element to os in turn. Each element is followed
