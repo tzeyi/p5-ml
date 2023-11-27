@@ -371,7 +371,8 @@ private:
   // NOTE:    This function must be tree recursive.
   static Node *copy_nodes_impl(Node *node) {
 
-    Node *new_node = new Node;
+    Node *new_node = new Node(); 
+
     if (!node){
       return new_node;
     }else{
@@ -495,6 +496,7 @@ private:
            check_sorting_invariant_impl(node->right, less);
     }
 
+
   // EFFECTS : Traverses the tree rooted at 'node' using an in-order traversal,
   //           printing each element to os in turn. Each element is followed
   //           by a space (there will be an "extra" space at the end).
@@ -503,7 +505,13 @@ private:
   //       See https://en.wikipedia.org/wiki/Tree_traversal#In-order
   //       for the definition of a in-order traversal.
   static void traverse_inorder_impl(const Node *node, std::ostream &os) {
-    assert(false);
+    if (!node){
+      return;
+    }
+
+    traverse_inorder_impl(node->left, os);
+    os << node->datum << " ";
+    traverse_inorder_impl(node->right, os);
   }
 
   // EFFECTS : Traverses the tree rooted at 'node' using a pre-order traversal,
@@ -514,7 +522,13 @@ private:
   //       See https://en.wikipedia.org/wiki/Tree_traversal#Pre-order
   //       for the definition of a pre-order traversal.
   static void traverse_preorder_impl(const Node *node, std::ostream &os) {
-    assert(false);
+    if (!node){
+      return;
+    }
+
+    os << node->datum << " ";
+    traverse_preorder_impl(node->left, os);
+    traverse_preorder_impl(node->right, os);
   }
 
   // EFFECTS : Returns a pointer to the Node containing the smallest element
@@ -529,7 +543,16 @@ private:
   //       'less' parameter). Based on the result, you gain some information
   //       about where the element you're looking for could be.
   static Node * min_greater_than_impl(Node *node, const T &val, Compare less) {
-    assert(false);
+    if (!node){
+      return nullptr;
+    }
+
+    if (less(val, min_element_impl(node)->datum)){
+      return min_element_impl(node);
+    } else{
+      return min_greater_than_impl(node->right, val, less);
+    }
+
   }
 
 
