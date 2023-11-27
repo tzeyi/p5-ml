@@ -374,14 +374,15 @@ private:
     Node *new_node = new Node(); 
 
     if (!node){
+      new_node = nullptr;
       return new_node;
     }else{
       new_node->datum = node->datum;
       new_node->left = copy_nodes_impl(node->left);
       new_node->right = copy_nodes_impl(node->right);
+      return new_node;
     }
 
-    return new_node;
   }
 
   // EFFECTS: Frees the memory for all nodes used in the tree rooted at 'node'.

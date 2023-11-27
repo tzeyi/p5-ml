@@ -81,10 +81,6 @@ TEST(bst_test_min_element){
   tree.insert(2);
   tree.insert(0);
 
-
-  cout << "cout << tree.to_string()" << endl;
-  cout << tree.to_string() << endl << endl;  
-
   ASSERT_TRUE(*tree.min_element() == 0);
 }
 
@@ -206,7 +202,6 @@ TEST(bst_test_min_greater_than2){
   tree.insert(7);
   tree.insert(3);
 
-  cout << *tree.min_greater_than(2) << endl;
   ASSERT_TRUE(*tree.min_greater_than(2) == 3);
 }
 
@@ -219,12 +214,24 @@ TEST(bst_test_min_greater_than_edge_no_greater){
   ASSERT_TRUE(tree.min_greater_than(10) == tree.end());
 }
 
-
-
 TEST(bst_test_min_greater_than_edge_nullptr){
   BinarySearchTree<int> tree;
 
   ASSERT_TRUE(tree.min_greater_than(5) == tree.end());
+}
+
+TEST(bst_test_copy_constructor){
+  BinarySearchTree<int> tree;
+  tree.insert(5);
+  tree.insert(7);
+  tree.insert(3);
+
+  BinarySearchTree<int> new_tree(tree);
+
+  cout << "cout << tree.to_string()" << endl;
+  cout << new_tree.to_string() << endl << endl;  
+
+  ASSERT_TRUE(new_tree.size() == 3);
 }
 
 
