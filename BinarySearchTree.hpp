@@ -356,6 +356,15 @@ private:
   //          number of nodes in the longest path from the 'node' to a leaf.
   //          The height of an empty tree is 0.
   // NOTE:    This function must be tree recursive.
+  static int max(int x, int y){
+    if (x > y) {return x;}
+    else {return y;}
+  }
+  
+  // EFFECTS: Returns the height of the tree rooted at 'node', which is the
+  //          number of nodes in the longest path from the 'node' to a leaf.
+  //          The height of an empty tree is 0.
+  // NOTE:    This function must be tree recursive.
   static int height_impl(const Node *node) {
     if (node == nullptr) {
       return 0;
@@ -385,7 +394,9 @@ private:
   // EFFECTS: Frees the memory for all nodes used in the tree rooted at 'node'.
   // NOTE:    This function must be tree recursive.
   static void destroy_nodes_impl(Node *node) {
-    if(node!=nullptr){
+    if(node==nullptr){
+      return;
+    } else {
       destroy_nodes_impl(node->left);
       destroy_nodes_impl(node->right);
       delete node;
@@ -406,17 +417,14 @@ private:
   //       Two elements A and B are equivalent if and only if A is
   //       not less than B and B is not less than A.
   static Node * find_impl(Node *node, const T &query, Compare less) {
-    if (node == nullptr) {
+    if (node == nullptr){
       return nullptr;
-    }
-    else if (!less(node->datum, query) && !less(query, node->datum)) {
-      return node;
-    }
-    else if (!less(node->datum, query)) {
+    }else if (less(query, node->datum)){
       return find_impl(node->left, query, less);
-    }
-    else{
+    }else if (less(node->datum, query)){
       return find_impl(node->right, query, less);
+    }else {
+      return node;
     }
   }
 
@@ -443,8 +451,7 @@ private:
 
     if (less(item, node->datum)) {
       node->left = insert_impl(node->left, item, less);
-    } 
-    else {
+    } else {
       node->right = insert_impl(node->right, item, less);
     }
 
@@ -461,11 +468,9 @@ private:
   static Node * min_element_impl(Node *node) {
     if (node == nullptr) {
       return nullptr;
-    }
-    else if (node->left == nullptr) {
+    } else if (node->left == nullptr) {
       return node;
-    }
-    else{
+    } else{
       return min_element_impl(node->left);
     }
   }
@@ -478,11 +483,9 @@ private:
   static Node * max_element_impl(Node *node) {
     if (node == nullptr) {
       return nullptr;
-    }
-    else if (node->right == nullptr) {
+    } else if (node->right == nullptr) {
       return node;
-    }
-    else{
+    } else{
       return max_element_impl(node->right);
     }
   }
@@ -494,16 +497,15 @@ private:
   static bool check_sorting_invariant_impl(const Node *node, Compare less) {
     if (node == nullptr) {
       return true;
-    }
-    else if ((node->right != nullptr)&&(!less(node->datum, node->right->datum))){
+    } else if ((node->right != nullptr)&&(!less(node->datum, node->right->datum))){
       return false;
-    }
-    else if ((node->left != nullptr)&&(!less(node->left->datum, node->datum))){
+    } else if ((node->left != nullptr)&&(!less(node->left->datum, node->datum))){
       return false;
+    } else {
+      return check_sorting_invariant_impl(node->left, less)
+           && check_sorting_invariant_impl(node->right, less);
     }
 
-    return check_sorting_invariant_impl(node->left, less)
-           && check_sorting_invariant_impl(node->right, less);
   }
 
   // EFFECTS : Traverses the tree rooted at 'node' using an in-order traversal,
@@ -516,8 +518,7 @@ private:
   static void traverse_inorder_impl(const Node *node, std::ostream &os) {
     if (node == nullptr){
       return;
-    }
-    else{
+    } else{
       traverse_inorder_impl(node->left, os);
       os << node->datum << " ";
       traverse_inorder_impl(node->right, os);
@@ -534,8 +535,7 @@ private:
   static void traverse_preorder_impl(const Node *node, std::ostream &os) {
     if (node == nullptr){
       return;
-    }
-    else{
+    } else{
       os << node->datum << " ";
       traverse_preorder_impl(node->left, os);
       traverse_preorder_impl(node->right, os);
@@ -553,26 +553,18 @@ private:
   // HINT: At each step, compare 'val' the the current node (using the
   //       'less' parameter). Based on the result, you gain some information
   //       about where the element you're looking for could be.
-  static Node * min_greater_than_impl(Node *node, const T &val, Compare less) {
+  static Node * min_greater_than_impl(Node *node, const T &val, Compare less) {  
     if (node == nullptr) {
       return nullptr;
-    }
-
-    if (!less(node->datum, val) && !less(val, node->datum)) {
-      if (node->right == nullptr) {
-        return nullptr;
-      }
-      else {
+    } else if (!less(node->datum, val) && !less(val, node->datum)) {
         return min_greater_than_impl(node->right, val, less);
-      }
-    }
-    else if (less(node->datum, val)) {
+    } else if (less(node->datum, val)) {
       return min_greater_than_impl(node->right, val, less);
+    } else if (less(val, node->left->datum)) {
+      return min_greater_than_impl(node->left, val, less);
+    } else{
+      return node;
     }
-    else if (node->left != nullptr && less(val, node->left->datum)) {
-        return min_greater_than_impl(node->left, val, less);
-    }
-    return node;
   }
 
 

@@ -64,7 +64,15 @@ public:
   // If these operations will work correctly without defining them,
   // you should omit them. A user of the class must be able to create,
   // copy, assign, and destroy Maps.
+  Map() {} 
 
+  Map(const Map &other_map) 
+    : bst( BinarySearchTree(other_map.bst) ) {}
+
+  Map &operator=(const Map &other_map) {
+    bst = other_map.bst;
+    return *this;
+  }
 
   // EFFECTS : Returns whether this Map is empty.
   bool empty() const{
@@ -85,8 +93,7 @@ public:
   //       (key, value) pairs, you'll need to construct a dummy value
   //       using "Value_type()".
   Iterator find(const Key_type& k) const {
-    Pair_type pair = make_pair(k, Value_type(0));
-    return bst.find(pair);
+    return bst.find(make_pair(k, Value_type(0)));
   }
 
   // MODIFIES: this
@@ -106,13 +113,12 @@ public:
   //
   // HINT: http://www.cplusplus.com/reference/map/map/operator[]/
   Value_type& operator[](const Key_type& k){
-    Iterator i = find(k);
-    if (i == end()) {
-      Pair_type pair = make_pair(k, Value_type(0));
-      i = begin();
-      i = bst.insert(pair);
+    if (find(k) == end()) {
+      bst.insert(make_pair(k, Value_type(0)));
+      return bst.find(make_pair(k, Value_type(0)))->second;
+    } else{
+      return find(k)->second;
     }
-    return i->second;
   }
   
 
@@ -125,13 +131,11 @@ public:
   //           an iterator to the newly inserted element, along with
   //           the value true.
   std::pair<Iterator, bool> insert(const Pair_type &val){
-    Iterator i = find(val.first);
-    if (i == end()) {
-      Iterator j = bst.insert(val);
-      return make_pair(j, true);
+    if (find(val.first) == end()) {
+      return make_pair(bst.insert(val), true);
     }
     else{
-      return make_pair(i, false);
+      return make_pair(find(val.first), false);
     }
   }
 

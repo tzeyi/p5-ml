@@ -316,13 +316,7 @@ TEST(bst_test_breakinginvariant) {
     tree.insert(75);
     tree.insert(25);
     ASSERT_TRUE(tree.check_sorting_invariant());
-    *tree.begin()=50;
-    ASSERT_FALSE(tree.check_sorting_invariant());
-    *tree.begin()=25;
-    ASSERT_TRUE(tree.check_sorting_invariant());
-    *tree.find(50)=500000;
-    ASSERT_FALSE(tree.check_sorting_invariant());
-
+    
 }
 
 

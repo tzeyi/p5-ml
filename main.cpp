@@ -16,8 +16,7 @@ class Classifier{
       set<string> setof_all_unique_words;
       int total_posts;
       int vocabulary_count;
-      string words_database_string;
-      map<string, int> tag_freq;
+      map<string, int> tag_count;
 
 
    public:
@@ -38,27 +37,21 @@ class Classifier{
     //REQUIRE: label and content to not be NULL
     //MODIFY: my_map
     //EFFECT: Initializes my_map with the data from the training sets; Increase the number
-    //        of posts; construct a word database string.
+    //        of posts; Increase the count of a tag.
     void init_mymap (const string &label, const string &content){
         setof_unique_tags.insert(label);
 
         set<string> setof_unique_words;
         setof_unique_words = unique_words(content);
 
-        for (auto i: setof_unique_words) {
-            my_map[{label, i}]++;
+        for (auto x: setof_unique_words) {
+            my_map[{label, x}]++;
+            setof_all_unique_words.insert(x);
         }
 
         total_posts++;
-
-        words_database_string = words_database_string + " " + content;
-    }
-    
-    //REQUIRE: label to not be NULL
-    //MODIFY: tag_freq
-    //EFFECT: Increases tag frequency by one
-    void increase_tag_freq (const string &label){
-        tag_freq[label]++;
+        tag_count[label]++;
+        
     }
 
     //REQUIRE: word to not be NULL
@@ -66,10 +59,9 @@ class Classifier{
     //EFFECT: Returns the number of posts containing word w. 
     int total_posts_containing_word (const string &word){
         int count = 0;
-        for (auto i : setof_unique_tags){
-            auto j = my_map.find(make_pair(i, word));
-            if (j != my_map.end()) {
-                count += j->second;
+        for (auto x : setof_unique_tags){
+            if (my_map.find(make_pair(x, word)) != my_map.end()) {
+                count += my_map.find(make_pair(x, word))->second;
             }
         }
         return count;
@@ -81,7 +73,7 @@ class Classifier{
     double lnPC (string label){
 
         double total_posts_d = (double)total_posts;
-        double total_post_labelC = tag_freq[label];
+        double total_post_labelC = (double)tag_count[label];
 
         return log(total_post_labelC/total_posts_d);
     }
@@ -91,17 +83,16 @@ class Classifier{
     //EFFECT: returns ln(P(W|C))
     double lnPWC (const string &label, const string &word){
         int pair_count;
-        auto i = my_map.find(make_pair(label, word));
-        if (i == my_map.end()){
-            pair_count = -1;
+        if (my_map.find(make_pair(label, word)) != my_map.end()){
+            pair_count = my_map.find(make_pair(label, word))->second;
         } else {
-            pair_count = i->second;
+            pair_count = -1;
         }
 
         double pair_count_d = (double)pair_count;
         double total_posts_d = (double)total_posts;
         double number_posts_w = total_posts_containing_word (word);   //probably need to double it?
-        double total_post_labelC = tag_freq[label];
+        double total_post_labelC = tag_count[label];
 
         if (number_posts_w == 0){
             return log (1.0 / total_posts_d);
@@ -111,68 +102,76 @@ class Classifier{
             return log (pair_count_d / total_post_labelC);
         }
     }
+    
+    //REQUIRE: content to not be NULL
+    //MODIFY: N/A
+    //EFFECT: returns a dataset pair of all tags and its respective logscore
+    vector <pair<string, double>> tags_and_logscore (const string &content){
+        vector<pair<string, double>> tandl;
+        
+        set<string> setof_words = unique_words (content);
+
+        for (auto x : setof_unique_tags) {
+            double tag_score = 0.0;
+            tag_score += lnPC(x);
+            for (auto y : setof_words) {
+                tag_score += lnPWC(x, y); 
+            }
+            tandl.push_back(make_pair(x,tag_score));
+        }
+
+        return tandl;
+    }
 
     //REQUIRE: content to not be NULL
     //MODIFY: N/A
     //EFFECT: returns the highest scoring tag as the predicted tag and its log probability 
-    pair<string, double> predicted_tag_and_logprob (const string &content){
-        vector <string> tags;
-        vector <double> log_score; 
-        
-        set<string> setof_words = unique_words (content);
+    pair<string, double> predicted_tag_and_logprob (vector <pair<string, double>> &tandl){  
 
-        for (auto i : setof_unique_tags) {
-            tags.push_back(i);
-            double tags_score = 0.0;
-            tags_score += lnPC(i);
-            for (auto j : setof_words) {
-                tags_score += lnPWC(i, j); 
-            }
-            log_score.push_back(tags_score);
-        }
+        string highestscoringtag;
+        double highestscore = -99999999.0;
 
-        int index_highestscoringtag = 0;
-        double highestscore = log_score[0];
-
-        for (size_t i = 1; i < tags.size(); i++) {
-            if (log_score[i] > highestscore) {
-                highestscore = log_score[i];
-                index_highestscoringtag = i;
-            } else if (log_score[i] == highestscore) {
-                if (tags[index_highestscoringtag].compare(tags[i]) > 0) {
-                    highestscore = log_score[i];
-                    index_highestscoringtag = i;
+        for (auto pr : tandl) {
+            if (pr.second > highestscore) {
+                highestscoringtag = pr.first;
+                highestscore = pr.second;
+            } else if (pr.second == highestscore) {
+                if (highestscoringtag.compare(pr.first) > 0) {
+                    highestscoringtag = pr.first;
+                    highestscore = pr.second;
                 }
             }
         }
-        return make_pair(tags[index_highestscoringtag], highestscore);
+        return make_pair(highestscoringtag, highestscore);
     }
     
     //REQUIRE: N/A
     //MODIFY: N/A
     //EFFECT: prints the additional details in debug mode. 
     void debugmode_print (){
-        setof_all_unique_words = unique_words(words_database_string);
+        
         vocabulary_count = setof_all_unique_words.size();
 
-        cout << "vocabulary size = " << vocabulary_count << "\n\n" << "classes:" << "\n";
+        cout << "vocabulary size = " << vocabulary_count << "\n\nclasses:\n";
 
-        for (auto i : setof_unique_tags) {
-            cout << "  ";
-            cout << i << ", " << tag_freq[i] << " examples, log-prior = " 
-                                                         << lnPC(i) << '\n';
+        for (auto x : setof_unique_tags) {
+            cout << "  " << x << ", " << tag_count[x] << " examples, log-prior = " 
+                                                               << lnPC(x) << "\n";
         }
         
         cout << "classifier parameters:" << '\n';
 
-        for (auto i : my_map) {
-            cout << "  " << i.first.first << ":" << i.first.second;
-            cout << ", count = " << i.second << ", log-likelihood = " 
-                         << lnPWC(i.first.first, i.first.second) << '\n';
+        for (auto y : my_map) {
+            cout << "  " << y.first.first << ":" << y.first.second 
+                         << ", count = " << y.second << ", log-likelihood = " 
+                         << lnPWC(y.first.first, y.first.second) << "\n";
         }
-        cout << '\n';
+        cout << "\n";
     }
 
+    //REQUIRE: N/A
+    //MODIFY: N/A
+    //EFFECT: returns the total_posts.
     int get_total_posts (){
         return total_posts;
     }
@@ -183,39 +182,35 @@ int main (int argc, char *argv[]){
     cout.precision(3);
     Classifier classi = Classifier ();
 
-    string trainfile = string(argv[1]);
-    csvstream csvin(trainfile);
-    string testfile = string(argv[2]);
-    csvstream csvout(testfile);
+    string train_file = string(argv[1]);
+    csvstream csvtrain(train_file);
+    string test_file = string(argv[2]);
+    csvstream csvtest(test_file);
+    bool debugmode = false;
 
     if (argc != 3 && argc != 4) {
         cout << "Usage: main.exe TRAIN_FILE TEST_FILE [--debug]" << endl;
-        return 1;
-    }
-    
-    bool debugmode = false;
-
-    if (argc == 4) {
-        if (string(argv[3]) == "--debug") { 
-            debugmode = true; 
-            cout << "training data:" << '\n';
-        } else {
-            cout << "Usage: main.exe TRAIN_FILE TEST_FILE [--debug]" << endl;
-        }
+        return -1;
+    } else if ((argc == 4)&&(string(argv[3]) == "--debug")){
+        debugmode = true; 
+        cout << "training data:\n";
+    } else if ((argc == 4)&&(string(argv[3]) != "--debug")){
+        cout << "Usage: main.exe TRAIN_FILE TEST_FILE [--debug]" << endl;
+        return -1;
     }
     
     map<string, string> row;
-    while (csvin >> row) {
-       string tag; string content;
+    while (csvtrain >> row) {
+       string tag; 
+       string content;
        for (auto &col : row) {
-            if (col.first == "tag") {
+            if (col.first == "tag") {     
                 tag = col.second;
             } else if (col.first == "content") {
                 content = col.second;
             }
         }
         classi.init_mymap(tag, content);
-        classi.increase_tag_freq (tag);
         if (debugmode){
             cout << "  label = " << tag << ", content = " << content << '\n';
         }
@@ -227,12 +222,13 @@ int main (int argc, char *argv[]){
     } else {
         cout << "\n";
     }
-    cout << "test data:" << '\n';
+    cout << "test data:\n";
 
     int total_posts_tested = 0;
     int total_posts_accurate = 0;
-    while(csvout >> row){
-        string tag; string content;
+    while(csvtest >> row){
+        string tag; 
+        string content;
         for (auto &col : row) {
             if(col.first == "tag"){
                 tag = col.second;
@@ -240,8 +236,9 @@ int main (int argc, char *argv[]){
                 content = col.second;
             }
         }
-
-        pair <string, double> prediction = classi.predicted_tag_and_logprob(content);
+        
+        vector <pair<string, double>> dataset = classi.tags_and_logscore(content);
+        pair <string, double> prediction = classi.predicted_tag_and_logprob(dataset);
         cout << "  correct = " << tag << ", predicted = " << prediction.first   
                            << ", log-probability score = " << prediction.second
                            << "\n  content = " << content << "\n\n";
