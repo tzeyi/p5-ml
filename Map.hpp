@@ -133,8 +133,7 @@ public:
   std::pair<Iterator, bool> insert(const Pair_type &val){
     if (find(val.first) == end()) {
       return make_pair(bst.insert(val), true);
-    }
-    else{
+    } else{
       return make_pair(find(val.first), false);
     }
   }

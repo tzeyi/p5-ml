@@ -35,9 +35,9 @@ class Classifier{
     }
 
     //REQUIRE: label and content to not be NULL
-    //MODIFY: my_map
-    //EFFECT: Initializes my_map with the data from the training sets; Increase the number
-    //        of posts; Increase the count of a tag.
+    //MODIFY: my_map; total_posts; tag_count
+    //EFFECT: Initializes my_map with the data from the training sets; Increase 
+    //        the number of posts; Increase the count of a tag.
     void init_mymap (const string &label, const string &content){
         setof_unique_tags.insert(label);
 
@@ -60,9 +60,11 @@ class Classifier{
     int total_posts_containing_word (const string &word){
         int count = 0;
         for (auto x : setof_unique_tags){
-            if (my_map.find(make_pair(x, word)) != my_map.end()) {
-                count += my_map.find(make_pair(x, word))->second;
-            }
+                if (my_map.find(make_pair(x, word))== my_map.end()){
+                   count+=0;
+                } else{
+                   count += my_map.find(make_pair(x, word))->second;
+                }
         }
         return count;
     }
@@ -83,20 +85,20 @@ class Classifier{
     //EFFECT: returns ln(P(W|C))
     double lnPWC (const string &label, const string &word){
         int pair_count;
-        if (my_map.find(make_pair(label, word)) != my_map.end()){
+        if (my_map.find(make_pair(label, word))== my_map.end()){
+            pair_count = 0;
+        } else{
             pair_count = my_map.find(make_pair(label, word))->second;
-        } else {
-            pair_count = -1;
         }
 
         double pair_count_d = (double)pair_count;
         double total_posts_d = (double)total_posts;
-        double number_posts_w = total_posts_containing_word (word);   //probably need to double it?
-        double total_post_labelC = tag_count[label];
+        double number_posts_w = (double) total_posts_containing_word (word);
+        double total_post_labelC = (double)tag_count[label];
 
         if (number_posts_w == 0){
             return log (1.0 / total_posts_d);
-        } else if (pair_count == -1){
+        } else if (pair_count == 0){
             return log (number_posts_w / total_posts_d);
         } else {
             return log (pair_count_d / total_post_labelC);
@@ -112,8 +114,7 @@ class Classifier{
         set<string> setof_words = unique_words (content);
 
         for (auto x : setof_unique_tags) {
-            double tag_score = 0.0;
-            tag_score += lnPC(x);
+            double tag_score = lnPC(x);
             for (auto y : setof_words) {
                 tag_score += lnPWC(x, y); 
             }
@@ -125,10 +126,12 @@ class Classifier{
 
     //REQUIRE: content to not be NULL
     //MODIFY: N/A
-    //EFFECT: returns the highest scoring tag as the predicted tag and its log probability 
-    pair<string, double> predicted_tag_and_logprob (vector <pair<string, double>> &tandl){  
+    //EFFECT: returns the highest scoring tag as the predicted 
+    //        tag and its log probability 
+    pair<string, double> predicted_tag_and_logprob 
+                          (vector <pair<string, double>> &tandl){  
 
-        string highestscoringtag;
+        string highestscoringtag="";
         double highestscore = -99999999.0;
 
         for (auto pr : tandl) {
@@ -136,7 +139,7 @@ class Classifier{
                 highestscoringtag = pr.first;
                 highestscore = pr.second;
             } else if (pr.second == highestscore) {
-                if (highestscoringtag.compare(pr.first) > 0) {
+                if (pr.first.compare(highestscoringtag) > 0) {
                     highestscoringtag = pr.first;
                     highestscore = pr.second;
                 }
@@ -159,7 +162,7 @@ class Classifier{
                                                                << lnPC(x) << "\n";
         }
         
-        cout << "classifier parameters:" << '\n';
+        cout << "classifier parameters:\n";
 
         for (auto y : my_map) {
             cout << "  " << y.first.first << ":" << y.first.second 
@@ -172,8 +175,42 @@ class Classifier{
     //REQUIRE: N/A
     //MODIFY: N/A
     //EFFECT: returns the total_posts.
-    int get_total_posts (){
+    int total_posts_count (){
         return total_posts;
+    }
+    
+    //REQUIRE: valid csvstream is inputted
+    //MODIFY: N/A
+    //EFFECT: prints the test performance and scores. 
+    void process_test_dataset (csvstream &csvtest){
+       int total_posts_tested = 0;
+       int total_posts_accurate = 0;
+       map<string, string> row;
+       while(csvtest >> row){
+          string tag; 
+          string content;
+          for (auto &col : row) {
+              if(col.first == "tag"){
+                tag = col.second;
+              } else if(col.first == "content") {
+                content = col.second;
+            }
+        }
+        
+          vector <pair<string, double>> dataset = tags_and_logscore(content);
+          pair <string, double> prediction = predicted_tag_and_logprob(dataset);
+          cout << "  correct = " << tag << ", predicted = " << prediction.first   
+                           << ", log-probability score = " << prediction.second
+                           << "\n  content = " << content << "\n\n";
+        
+          total_posts_tested++;
+          if (prediction.first == tag){
+            total_posts_accurate++;
+          }
+        }
+
+        cout << "performance: " << total_posts_accurate << " / " << total_posts_tested <<
+                                                        " posts predicted correctly\n";
     }
 };
 
@@ -191,13 +228,13 @@ int main (int argc, char *argv[]){
     if (argc != 3 && argc != 4) {
         cout << "Usage: main.exe TRAIN_FILE TEST_FILE [--debug]" << endl;
         return -1;
-    } else if ((argc == 4)&&(string(argv[3]) == "--debug")){
-        debugmode = true; 
-        cout << "training data:\n";
     } else if ((argc == 4)&&(string(argv[3]) != "--debug")){
         cout << "Usage: main.exe TRAIN_FILE TEST_FILE [--debug]" << endl;
         return -1;
-    }
+    } else if ((argc == 4)&&(string(argv[3]) == "--debug")){
+        debugmode = true; 
+        cout << "training data:\n";
+    } 
     
     map<string, string> row;
     while (csvtrain >> row) {
@@ -212,11 +249,11 @@ int main (int argc, char *argv[]){
         }
         classi.init_mymap(tag, content);
         if (debugmode){
-            cout << "  label = " << tag << ", content = " << content << '\n';
+            cout << "  label = " << tag << ", content = " << content << "\n";
         }
     }
     
-    cout << "trained on " << classi.get_total_posts() << " examples" << '\n';
+    cout << "trained on " << classi.total_posts_count() << " examples" << "\n";
     if (debugmode) { 
         classi.debugmode_print();
     } else {
@@ -224,32 +261,6 @@ int main (int argc, char *argv[]){
     }
     cout << "test data:\n";
 
-    int total_posts_tested = 0;
-    int total_posts_accurate = 0;
-    while(csvtest >> row){
-        string tag; 
-        string content;
-        for (auto &col : row) {
-            if(col.first == "tag"){
-                tag = col.second;
-            } else if(col.first == "content") {
-                content = col.second;
-            }
-        }
-        
-        vector <pair<string, double>> dataset = classi.tags_and_logscore(content);
-        pair <string, double> prediction = classi.predicted_tag_and_logprob(dataset);
-        cout << "  correct = " << tag << ", predicted = " << prediction.first   
-                           << ", log-probability score = " << prediction.second
-                           << "\n  content = " << content << "\n\n";
-        
-        total_posts_tested++;
-        if (tag == prediction.first){
-            total_posts_accurate++;
-        }
-    }
-
-    cout << "performance: " << total_posts_accurate << " / " << total_posts_tested <<
-                                                        " posts predicted correctly\n";  
+    classi.process_test_dataset(csvtest);
 
 }
