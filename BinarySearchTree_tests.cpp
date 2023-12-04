@@ -52,6 +52,47 @@ TEST(bst_test_insert_not_empty2) {
   ASSERT_TRUE(tree.height() == 4);
 }
 
+TEST(bst_test_insert_not_empty3) {
+  BinarySearchTree<int> tree;
+
+  tree.insert(1);
+  tree.insert(2);
+  int three = *tree.insert(3);
+
+  ASSERT_TRUE(three == 3);
+}
+
+TEST(bst_test_insert_string) {
+  BinarySearchTree<string> tree;
+
+  tree.insert("apple");
+  tree.insert("banana");
+  tree.insert("cat");
+
+  ASSERT_TRUE(tree.size() == 3);
+  ASSERT_TRUE(tree.height() == 3);
+  ASSERT_TRUE(*tree.max_element() == "cat");
+  ASSERT_TRUE(*tree.min_element() == "apple");
+}
+
+TEST(bst_test_insert_string2) {
+  BinarySearchTree<string> tree;
+
+  tree.insert("apple");
+  tree.insert("donkey");
+  tree.insert("banana");
+  tree.insert("cat");
+  tree.insert("elephant");
+
+  ASSERT_TRUE(tree.check_sorting_invariant());
+  ASSERT_TRUE(tree.size() == 5);
+  ASSERT_TRUE(tree.height() == 4);
+  ASSERT_TRUE(*tree.max_element() == "elephant");
+  ASSERT_TRUE(*tree.min_element() == "apple");
+}
+
+
+
 TEST(bst_test_find){
   BinarySearchTree<int> tree;
 
