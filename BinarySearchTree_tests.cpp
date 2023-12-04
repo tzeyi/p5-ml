@@ -68,6 +68,39 @@ TEST(bst_test_find){
   ASSERT_EQUAL(tree.begin(), tree.find(2));
 }
 
+TEST(bst_test_find_modify_find_iterator){
+  BinarySearchTree<int> tree;
+
+  tree.insert(3);
+  tree.insert(5);
+  tree.insert(7);
+
+  *tree.find(3) = 9;
+
+  ASSERT_FALSE(tree.check_sorting_invariant());
+  ASSERT_TRUE(tree.find(9) != tree.end());
+  ASSERT_TRUE(tree.find(3) == tree.end());
+  ASSERT_EQUAL(tree.begin(), tree.find(9));
+}
+
+TEST(bst_test_find_modify_find_iterator2){
+  BinarySearchTree<int> tree;
+
+  tree.insert(3);
+  tree.insert(5);
+  tree.insert(7);
+
+  *tree.find(3) = 3;
+
+  ASSERT_TRUE(tree.check_sorting_invariant());
+
+  *tree.find(3) = 4;
+
+  ASSERT_TRUE(tree.check_sorting_invariant());
+  ASSERT_TRUE(tree.find(3) == tree.end());
+}
+
+
 TEST(bst_test_find_empty){
   BinarySearchTree<int> tree;
 
@@ -202,6 +235,20 @@ TEST(bst_test_check_sorting_invariant_negative){
   ASSERT_TRUE(tree.check_sorting_invariant());
 }
 
+
+TEST(bst_test_check_sorting_invariant_extra){
+  BinarySearchTree<int> tree;
+  tree.insert(4);
+  tree.insert(2);
+  tree.insert(6);
+  tree.insert(1);
+  tree.insert(3);
+  tree.insert(5);
+  tree.insert(7);
+
+  ASSERT_TRUE(tree.check_sorting_invariant());
+}
+
 TEST(bst_test_traverse_inorder){
   BinarySearchTree<int> tree;
   tree.insert(5);
@@ -259,8 +306,7 @@ TEST(bst_test_min_greater_than2){
   tree.insert(-2);
   tree.insert(-3);
   
-  cout << *tree.min_greater_than(-2);
-  //ASSERT_TRUE(*tree.min_greater_than(-2) == -1);
+  ASSERT_TRUE(*tree.min_greater_than(-2) == -1);
 }
 
 TEST(bst_test_min_greater_than_edge_no_greater){
@@ -272,10 +318,34 @@ TEST(bst_test_min_greater_than_edge_no_greater){
   ASSERT_TRUE(tree.min_greater_than(10) == tree.end());
 }
 
+TEST(bst_test_min_greater_than_edge_no_greater2){
+  BinarySearchTree<int> tree;
+  tree.insert(3);
+  tree.insert(1);
+  tree.insert(4);
+
+  ASSERT_TRUE(*tree.min_greater_than(2) == 3);
+}
+
+TEST(bst_test_min_greater_than_edge_no_greater3){
+  BinarySearchTree<int> tree;
+  tree.insert(3);
+
+  ASSERT_TRUE(*tree.min_greater_than(2) == 3);
+}
+
+TEST(bst_test_min_greater_than_edge_no_greater_when_equal){
+  BinarySearchTree<int> tree;
+  tree.insert(3);
+
+  ASSERT_TRUE(*tree.min_greater_than(2) == 3);
+}
+
 TEST(bst_test_min_greater_than_edge_nullptr){
   BinarySearchTree<int> tree;
+  tree.insert(3);
 
-  ASSERT_TRUE(tree.min_greater_than(5) == tree.end());
+  ASSERT_TRUE(tree.min_greater_than(3) == tree.end());
 }
 
 TEST(bst_test_copy_constructor){
@@ -299,8 +369,6 @@ TEST(bst_test_copy_constructor){
         ++x, ++y;
   }
   
-  
-
 }
 
 TEST(bst_test_copy_empty){
@@ -310,9 +378,79 @@ TEST(bst_test_copy_empty){
   ASSERT_TRUE(new_tree.size()==0);
   ASSERT_TRUE(new_tree.height()==0);
   ASSERT_TRUE(new_tree.empty() == true);
-
 }
 
+TEST(bst_test_copy_constructor2){
+  BinarySearchTree<int> tree;
+  tree.insert(5);
+  tree.insert(7);
+  tree.insert(3);
+
+  BinarySearchTree<int> new_tree(tree); 
+
+  ASSERT_EQUAL(new_tree.size(), tree.size());
+  ASSERT_EQUAL(tree.height(),new_tree.height());
+
+  ostringstream new_tree_oss_preorder;
+  tree.traverse_preorder(new_tree_oss_preorder);
+
+  ASSERT_TRUE(new_tree_oss_preorder.str() == "5 3 7 ");
+
+  ostringstream new_tree_oss_inorder;
+  tree.traverse_inorder(new_tree_oss_inorder);
+
+  ASSERT_TRUE(new_tree_oss_inorder.str() == "3 5 7 ");
+}
+
+TEST(bst_test_assign_operator){
+  BinarySearchTree<int> tree;
+  tree.insert(5);
+  tree.insert(7);
+  tree.insert(3);
+
+  BinarySearchTree<int> new_tree;
+  new_tree = tree; 
+
+  ASSERT_EQUAL(new_tree.size(), tree.size());
+  ASSERT_EQUAL(tree.height(), new_tree.height());
+
+  ostringstream new_tree_oss_preorder;
+  tree.traverse_preorder(new_tree_oss_preorder);
+
+  ASSERT_TRUE(new_tree_oss_preorder.str() == "5 3 7 ");
+
+  ostringstream new_tree_oss_inorder;
+  tree.traverse_inorder(new_tree_oss_inorder);
+
+  ASSERT_TRUE(new_tree_oss_inorder.str() == "3 5 7 ");
+}
+
+TEST(bst_test_assign_operator_empty){
+  BinarySearchTree<int> tree;
+
+  BinarySearchTree<int> new_tree;
+  new_tree = tree; 
+
+  ASSERT_EQUAL(new_tree.size(), tree.size());
+  ASSERT_EQUAL(tree.height(), new_tree.height());
+
+  ASSERT_TRUE(new_tree.height() == 0);
+  ASSERT_TRUE(new_tree.size() == 0);
+
+  ostringstream new_tree_oss_preorder;
+  tree.traverse_preorder(new_tree_oss_preorder);
+
+  ASSERT_TRUE(new_tree_oss_preorder.str() == "");
+
+  ostringstream new_tree_oss_inorder;
+  tree.traverse_inorder(new_tree_oss_inorder);
+
+  ASSERT_TRUE(new_tree_oss_inorder.str() == "");
+}
+
+TEST(bst_iterator){
+
+}
 
 
 TEST_MAIN()
