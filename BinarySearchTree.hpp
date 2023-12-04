@@ -489,12 +489,19 @@ private:
   static bool check_sorting_invariant_impl(const Node *node, Compare less) {
     if (!node){
       return true;
+    } else if (node->left && !less(node->left->datum, node->datum)){
+      return false;
+    } else if (node->right && !less(node->datum, node->right->datum)){
+      return false;
+    } else {
+      return check_sorting_invariant_impl(node->left, less) &&
+             check_sorting_invariant_impl(node->right, less);
     }
     
-    return (!node->left || less(node->left->datum, node->datum)) &&
-           (!node->right || less(node->datum, node->right->datum)) &&
-           check_sorting_invariant_impl(node->left, less) &&
-           check_sorting_invariant_impl(node->right, less);
+    // return (!node->left || less(node->left->datum, node->datum)) &&
+    //        (!node->right || less(node->datum, node->right->datum)) &&
+    //        check_sorting_invariant_impl(node->left, less) &&
+    //        check_sorting_invariant_impl(node->right, less);
     }
 
 
@@ -544,14 +551,17 @@ private:
   //       'less' parameter). Based on the result, you gain some information
   //       about where the element you're looking for could be.
   static Node * min_greater_than_impl(Node *node, const T &val, Compare less) {
-    if (!node){
+    
+    if (!node) {
       return nullptr;
-    }
-
-    if (less(val, min_element_impl(node)->datum)){
-      return min_element_impl(node);
-    } else{
+    } else if (!less(node->datum, val) && !less(val, node->datum)) {
+        return min_greater_than_impl(node->right, val, less);
+    } else if (less(node->datum, val)) {
       return min_greater_than_impl(node->right, val, less);
+    } else if (node->left && less(val, node->left->datum)) {
+      return min_greater_than_impl(node->left, val, less);
+    } else{
+      return node;
     }
 
   }

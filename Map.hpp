@@ -100,7 +100,7 @@ public:
   //       (key, value) pairs, you'll need to construct a dummy value
   //       using "Value_type()".
   Iterator find(const Key_type& k) const{
-    return bst.find(make_pair(k, Value_type()));
+    return bst.find(make_pair(k, Value_type(0)));
   }
 
   // MODIFIES: this
@@ -121,11 +121,11 @@ public:
   // HINT: http://www.cplusplus.com/reference/map/map/operator[]/
   Value_type& operator[](const Key_type& k){
     if (find(k) == end()){
-      return *( bst.insert(make_pair(k, Value_type())) );
+      Iterator new_element = bst.insert(make_pair(k, Value_type(0)));
+      return new_element->second;
     }else {
-      return *find(k);
+      return find(k)->second;
     }
-
   }
 
   // MODIFIES: this
@@ -136,13 +136,24 @@ public:
   //           false. Otherwise, inserts the given element and returns
   //           an iterator to the newly inserted element, along with
   //           the value true.
-  std::pair<Iterator, bool> insert(const Pair_type &val){}
+  std::pair<Iterator, bool> insert(const Pair_type &val){
+    if (bst.find(val) == end()){
+      Iterator new_element = bst.insert(val);
+      return make_pair(new_element, true);
+    } else {
+      return make_pair(bst.find(val), false);
+    }
+  }
 
   // EFFECTS : Returns an iterator to the first key-value pair in this Map.
-  Iterator begin() const;
+  Iterator begin() const{
+    return bst.begin();
+  };
 
   // EFFECTS : Returns an iterator to "past-the-end".
-  Iterator end() const;
+  Iterator end() const{
+    return bst.end();
+  }
 
 private:
   BinarySearchTree<Pair_type, PairComp> bst;

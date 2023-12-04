@@ -88,32 +88,32 @@ int main() {
 
   // Using iterators
 
-  // it = map.begin();
-  // duck_it = duck_map.begin();
+  it = map.begin();
+  duck_it = duck_map.begin();
 
-  // (*it).second = 200;
-  // (*duck_it).second = "another duck name";
+  (*it).second = 200;
+  (*duck_it).second = "another duck name";
 
-  // ++++it;
-  // ++++duck_it;
+  ++++it;
+  ++++duck_it;
 
-  // it = it++;
-  // duck_it = duck_it++;
+  it = it++;
+  duck_it = duck_it++;
 
-  // b = map.end() == map.end();
-  // b = duck_map.end() == duck_map.end();
+  b = map.end() == map.end();
+  b = duck_map.end() == duck_map.end();
 
-  // b = map.end() != map.end();
-  // b = duck_map.end() != duck_map.end();
+  b = map.end() != map.end();
+  b = duck_map.end() != duck_map.end();
 
-  // const auto &const_it = it;
-  // const auto &const_duck_it = duck_it;
+  const auto &const_it = it;
+  const auto &const_duck_it = duck_it;
 
-  // Map<string, int>::Iterator it_copy(const_it);
-  // Map<Duck, string, DuckWealthLess>::Iterator duck_it_copy(const_duck_it);
+  Map<string, int>::Iterator it_copy(const_it);
+  Map<Duck, string, DuckWealthLess>::Iterator duck_it_copy(const_duck_it);
 
-  // cout << (*it_copy).first << (*duck_it_copy).second << endl;
+  cout << (*it_copy).first << (*duck_it_copy).second << endl;
 
-  // cout << b << st << endl;
+  cout << b << st << endl;
 
 }
