@@ -130,6 +130,27 @@ TEST(bst_test_min_element){
   ASSERT_TRUE(*tree.min_element() == 0);
 }
 
+
+TEST(bst_test_min_element2){
+  BinarySearchTree<int> tree;
+
+  tree.insert(1);
+  tree.insert(2);
+  tree.insert(3);
+
+  ASSERT_TRUE(*tree.min_element() == 1);
+}
+
+TEST(bst_test_min_element3){
+  BinarySearchTree<int> tree;
+
+  tree.insert(5);
+  tree.insert(1);
+  tree.insert(3);
+
+  ASSERT_TRUE(*tree.min_element() == 1);
+}
+
 TEST(bst_test_min_element_nullptr){
   BinarySearchTree<int> tree;
 
@@ -147,6 +168,16 @@ TEST(bst_test_max_element){
   tree.insert(0);
 
   ASSERT_TRUE(*tree.max_element() == 10);
+}
+
+TEST(bst_test_max_element2){
+  BinarySearchTree<int> tree;
+
+  tree.insert(1);
+  tree.insert(2);
+  tree.insert(3);
+
+  ASSERT_TRUE(*tree.max_element() == 3);
 }
 
 TEST(bst_test_minmax_element_negativevalues){
@@ -334,19 +365,22 @@ TEST(bst_test_min_greater_than_edge_no_greater3){
   ASSERT_TRUE(*tree.min_greater_than(2) == 3);
 }
 
-TEST(bst_test_min_greater_than_edge_no_greater_when_equal){
-  BinarySearchTree<int> tree;
-  tree.insert(3);
-
-  ASSERT_TRUE(*tree.min_greater_than(2) == 3);
-}
-
-TEST(bst_test_min_greater_than_edge_nullptr){
+TEST(bst_test_min_greater_than_edge_equal){
   BinarySearchTree<int> tree;
   tree.insert(3);
 
   ASSERT_TRUE(tree.min_greater_than(3) == tree.end());
 }
+
+TEST(bst_test_min_greater_than_edge_less_than){
+  BinarySearchTree<int> tree;
+  tree.insert(2);
+  tree.insert(1);
+  tree.insert(0);
+
+  ASSERT_TRUE(tree.min_greater_than(3) == tree.end());
+}
+
 
 TEST(bst_test_copy_constructor){
   BinarySearchTree<int> tree;
@@ -355,8 +389,6 @@ TEST(bst_test_copy_constructor){
   tree.insert(3);
 
   BinarySearchTree<int> new_tree(tree);
-  cout << "cout << tree.to_string()" << endl;
-  cout << new_tree.to_string() << endl << endl;  
 
   ASSERT_EQUAL(new_tree.size(), tree.size());
   ASSERT_EQUAL(tree.height(),new_tree.height());
@@ -448,8 +480,42 @@ TEST(bst_test_assign_operator_empty){
   ASSERT_TRUE(new_tree_oss_inorder.str() == "");
 }
 
-TEST(bst_iterator){
+TEST(bst_test_iterator_increment){
+  BinarySearchTree<int> tree;
+  tree.insert(5);
+  tree.insert(1);
+  tree.insert(7);
+  tree.insert(3);
 
+  cout << "cout << tree.to_string()" << endl;
+  cout << tree.to_string() << endl << endl;  
+  ostringstream tree_ss;
+
+  for (auto it = tree.begin(); it != tree.end(); it++){
+    tree_ss << *it;
+  }
+
+  cout << tree_ss.str() << endl;
+  ASSERT_TRUE(tree_ss.str() == "1357");
+}
+
+TEST(bst_test_iterator_increment2){
+  BinarySearchTree<int> tree;
+  tree.insert(5);
+  tree.insert(4);
+  tree.insert(3);
+  tree.insert(2);
+
+  cout << "cout << tree.to_string()" << endl;
+  cout << tree.to_string() << endl << endl;  
+  ostringstream tree_ss;
+
+  for (auto it = tree.begin(); it != tree.end(); it++){
+    tree_ss << *it;
+  }
+
+  cout << tree_ss.str() << endl;
+  ASSERT_TRUE(tree_ss.str() == "2345");
 }
 
 
