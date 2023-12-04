@@ -349,15 +349,15 @@ private:
     return 1 + size_impl(node->left) + size_impl(node->right);
   }
 
-  // EFFECTS: Returns the height of the tree rooted at 'node', which is the
-  //          number of nodes in the longest path from the 'node' to a leaf.
-  //          The height of an empty tree is 0.
-  // NOTE:    This function must be tree recursive.
+  // helper function for height_impl
   static int max(int x, int y){
     if (x > y) {return x;}
     else {return y;}
   }
-
+  // EFFECTS: Returns the height of the tree rooted at 'node', which is the
+  //          number of nodes in the longest path from the 'node' to a leaf.
+  //          The height of an empty tree is 0.
+  // NOTE:    This function must be tree recursive.
   static int height_impl(const Node *node) {
     if (!node){
       return 0;
@@ -370,13 +370,10 @@ private:
   //          tree rooted at 'node'.
   // NOTE:    This function must be tree recursive.
   static Node *copy_nodes_impl(Node *node) {
-
-    Node *new_node = new Node(); 
-
     if (!node){
-      new_node = nullptr;
-      return new_node;
+      return nullptr;
     }else{
+      Node *new_node = new Node(); 
       new_node->datum = node->datum;
       new_node->left = copy_nodes_impl(node->left);
       new_node->right = copy_nodes_impl(node->right);

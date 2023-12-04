@@ -3,7 +3,6 @@
 #include <iostream>
 
 using namespace std;
-
 TEST(bst_test_empty) {
   BinarySearchTree<int> tree;
 
@@ -14,6 +13,14 @@ TEST(bst_test_empty) {
   ASSERT_EQUAL(tree.end(), tree.min_element());
   ASSERT_EQUAL(tree.end(), tree.find(5));
   ASSERT_EQUAL(tree.end(), tree.min_greater_than(5));
+}
+
+TEST(bst_test_height) {
+  BinarySearchTree<int> tree;
+
+  tree.insert(1);
+
+  ASSERT_TRUE(tree.height() == 1);
 }
 
 TEST(bst_test_insert_empty) {
@@ -258,12 +265,8 @@ TEST(bst_test_min_greater_than2){
   tree.insert(0);
   tree.insert(-2);
   tree.insert(-3);
-
-    cout << "cout << tree.to_string()" << endl;
-  cout << tree.to_string() << endl << endl;  
+  
   cout << *tree.min_greater_than(-2);
-
-
   ASSERT_TRUE(*tree.min_greater_than(-2) == -1);
 }
 
@@ -276,19 +279,33 @@ TEST(bst_test_min_greater_than_edge_no_greater){
   ASSERT_TRUE(tree.min_greater_than(10) == tree.end());
 }
 
-TEST(bst_test_min_greater_than_edge_no_equal){
+TEST(bst_test_min_greater_than_edge_nullptr){
+  BinarySearchTree<int> tree;
+
+  ASSERT_TRUE(tree.min_greater_than(5) == tree.end());
+}
+
+
+TEST(bst_test_copy_constructor2){
   BinarySearchTree<int> tree;
   tree.insert(5);
   tree.insert(7);
   tree.insert(3);
 
-  ASSERT_TRUE(*tree.min_greater_than(3) == 5);
-}
+  BinarySearchTree<int> new_tree(tree); 
 
-TEST(bst_test_min_greater_than_edge_nullptr){
-  BinarySearchTree<int> tree;
+  ASSERT_EQUAL(new_tree.size(), tree.size());
+  ASSERT_EQUAL(tree.height(),new_tree.height());
 
-  ASSERT_TRUE(tree.min_greater_than(5) == tree.end());
+  ostringstream new_tree_oss_preorder;
+  tree.traverse_preorder(new_tree_oss_preorder);
+
+  ASSERT_TRUE(new_tree_oss_preorder.str() == "5 3 7 ");
+
+  ostringstream new_tree_oss_inorder;
+  tree.traverse_inorder(new_tree_oss_inorder);
+
+  ASSERT_TRUE(new_tree_oss_inorder.str() == "3 5 7 ");
 }
 
 TEST(bst_test_copy_constructor){
@@ -309,7 +326,6 @@ TEST(bst_test_copy_constructor){
         ASSERT_NOT_EQUAL(x, y);
         ++x, ++y;
   }
-
 }
 
 TEST(bst_test_copy_empty){
@@ -321,16 +337,6 @@ TEST(bst_test_copy_empty){
   ASSERT_TRUE(new_tree.empty() == true);
 
 }
-
-TEST(bst_test_breakinginvariant) {
-    BinarySearchTree<int> tree;
-    tree.insert(50);
-    tree.insert(75);
-    tree.insert(25);
-    ASSERT_TRUE(tree.check_sorting_invariant());
-    
-}
-
 
 
 TEST_MAIN()

@@ -3,6 +3,7 @@
 #include "csvstream.hpp"
 #include <map>
 #include <set>
+#include <cmath>
 
 using namespace std;
 
@@ -13,7 +14,7 @@ class Classifier{
         map<string, int> vocabulary_map;
         map<string, int> label_map;
 
-        int total_number_of_posts;
+        double total_number_of_posts;
 
     public:
         // REQUIRES valid input file name
@@ -54,41 +55,41 @@ class Classifier{
 
         // REQUIRES word
         // EFFECTS return number of posts containing w input
-        int get_number_of_posts_containting_word(const string &word){
+        int get_num_post_word(const string &word){
             return vocabulary_map.find(word)->second;
         }
 
         // REQUIRES label
         // EFFECTS return number of post with label input
-        int get_number_of_posts_with_label(const string &label){
+        int get_num_label(const string &label){
             return label_map.find(label)->second;
         }
 
         // REQUIRES label
         // EFFECTS return number of post with label input
-        int get_number_of_posts_with_label_containing_word(const string &label, const string &word){
+        int get_num_label_word(const string &label, const string &word){
             return label_word_map.find(make_pair(label, word))->second;
         }
 
         // REQUIRES label
         // EFFECTS return log_prior_probability
-        double compute_log_prior_probability(const string &label){
-            double n1 = get_number_of_posts_with_label(label);
+        double log_prior_prob(const string &label){
+            double n1 = get_num_label(label);
             return log(n1/total_number_of_posts);
         }
 
         // REQUIRES label
         // EFFECTS return log_prior_likelihood
-        double compute_log_likelihood(const string &label, const string &word){
+        double log_likelihood(const string &label, const string &word){
             if (vocabulary_map.find(word) == vocabulary_map.end()){
-                return log(1 / total_number_of_posts);
+                return log(1.0 / total_number_of_posts);
             }else if ((label_word_map.find(make_pair(label, word))
                      == label_word_map.end())){
 
-                double n1 = get_number_of_posts_containting_word(word);
+                double n1 = get_num_post_word(word);
                 return log(n1 / total_number_of_posts);
             }else {
-                double n1 = get_number_of_posts_with_label_containing_word(label, word);
+                double n1 = get_num_label_word(label, word);
                 return log(n1 / label_map.find(label)->second);
             }
         }
@@ -111,13 +112,13 @@ class Classifier{
             for (auto &label: label_map){
                 cout << "  " << label.first << ", " << label.second
                 << " examples, log-prior = " 
-                << compute_log_prior_probability(label.first)
+                << log_prior_prob(label.first)
                 << endl;
             }
         }
 
         void print_classifier_parameters(){
-            cout << "classifier parameters: " << endl;
+            cout << "classifier parameters:" << endl;
             for (auto &label_word: label_word_map){
                 string label = label_word.first.first;
                 string word = label_word.first.second;
@@ -125,19 +126,70 @@ class Classifier{
 
                 cout << "  " << label << ":"
                 << word << ", count = " << count
-                << ", log-likelihood = " << compute_log_likelihood(label, word)
+                << ", log-likelihood = " << log_likelihood(label, word)
                 << endl;
             }
         }
 
-        // void print_test_data(const string &label, const string &word){
-        //     cout << "test data:" << endl;
-        //     cout << "correct = " << label.first << ", " << label.second
-        //         << " examples, log-prior = " 
-        //         << compute_log_prior_probability(label.first)
-        //         << endl;
-        //     }
-        // }
+        pair<string, double> compute_most_probable_tag(string &content){
+            map<string, double> probability_of_tag_map;
+            set<string> words = unique_words(content);
+
+            for (auto &label : label_map){
+                double prob_of_tag = log_prior_prob(label.first);
+                for (auto &word : words){
+                    prob_of_tag += log_likelihood(label.first, word);
+                }
+                probability_of_tag_map.insert(
+                    make_pair(label.first, prob_of_tag)
+                    );
+            }
+
+            string first_tag = probability_of_tag_map.begin()->first;
+            double first_log_prob = probability_of_tag_map.begin()->second;
+
+            pair<string, double> highest_probability = make_pair(first_tag, first_log_prob);
+
+            for (auto &prob : probability_of_tag_map){
+                if (prob.second > highest_probability.second){
+                    highest_probability = make_pair(prob.first, prob.second);
+                }
+            }
+
+            return highest_probability;
+        }
+
+        void predict_test_data(csvstream &csv_test_in){
+            pair<string, double> highest_prob_tag;
+
+            int number_predicted_correct = 0;
+            int number_test_data = 0;
+            map<string, string> row;
+
+            cout << "test data:" << endl;
+
+            while(csv_test_in >> row){
+                number_test_data++;
+
+                string content = row["content"];
+                highest_prob_tag = compute_most_probable_tag(content);
+
+                cout << "  correct = " << row["tag"] <<  ", "
+                << "predicted = " << highest_prob_tag.first << 
+                ", log-probability score = " << highest_prob_tag.second
+                << endl;
+
+                cout << "  content = " << content << endl << endl;
+
+                if (row["tag"] == highest_prob_tag.first){
+                    number_predicted_correct++;
+                }
+            }
+
+            cout << "performance: " << number_predicted_correct << " / "
+            << number_test_data << " posts predicted correctly" << endl;
+        }
+
 };
 
 
@@ -188,8 +240,8 @@ int main(int argc, char* argv[]) {
         cout << endl;
     }
 
-
     string test_file = argv[2];
-    csvstream csv_test_in(train_file);
+    csvstream csv_test_in(test_file);
+    classifier.predict_test_data(csv_test_in);
 
 }
